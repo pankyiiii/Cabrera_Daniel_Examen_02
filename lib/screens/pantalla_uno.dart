@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
 import 'pantalla_dos.dart';
 
-// primera ventana del examen
-class PantallaUno extends StatefulWidget {
-  const PantallaUno({super.key});
+// primera ventana del examen con statelesswidget
+class PantallaUno extends StatelessWidget {
+  PantallaUno({super.key});
 
-  @override
-  State<PantallaUno> createState() => _PantallaUnoState();
-}
-
-class _PantallaUnoState extends State<PantallaUno> {
   // controladores de texto para los campos de solo lectura
   final TextEditingController _controladorNombres = TextEditingController();
   final TextEditingController _controladorApellidos = TextEditingController();
@@ -19,52 +14,37 @@ class _PantallaUnoState extends State<PantallaUno> {
   final TextEditingController _controladorResiduo = TextEditingController();
   final TextEditingController _controladorNumInvertido = TextEditingController();
 
-  // variables de estado
-  bool _botonMostrarHabilitado = false;
-  Map<String, dynamic>? _datosRecibidos;
-
-  @override
-  void dispose() {
-    _controladorNombres.dispose();
-    _controladorApellidos.dispose();
-    _controladorDividendo.dispose();
-    _controladorDivisor.dispose();
-    _controladorParteEntera.dispose();
-    _controladorResiduo.dispose();
-    _controladorNumInvertido.dispose();
-    super.dispose();
-  }
+  // notificador para habilitar el boton mostrar resultados en statelesswidget
+  final ValueNotifier<bool> _botonMostrarHabilitado = ValueNotifier<bool>(false);
+  final ValueNotifier<Map<String, dynamic>?> _datosRecibidos = ValueNotifier<Map<String, dynamic>?>(null);
 
   // navegar a la segunda pantalla y esperar resultados
-  Future<void> _irAPantallaDos() async {
+  Future<void> _irAPantallaDos(BuildContext context) async {
     final resultado = await Navigator.push<Map<String, dynamic>>(
       context,
       MaterialPageRoute(
-        builder: (_) => const PantallaDos(),
+        builder: (_) => PantallaDos(),
       ),
     );
 
     // si regresa con los datos completos se habilita el boton mostrar
     if (resultado != null) {
-      setState(() {
-        _datosRecibidos = resultado;
-        _botonMostrarHabilitado = true;
-      });
+      _datosRecibidos.value = resultado;
+      _botonMostrarHabilitado.value = true;
     }
   }
 
   // mostrar todos los datos al presionar el boton amarillo
   void _mostrarResultados() {
-    if (_datosRecibidos != null) {
-      setState(() {
-        _controladorNombres.text = _datosRecibidos!['nombres'] ?? '';
-        _controladorApellidos.text = _datosRecibidos!['apellidos'] ?? '';
-        _controladorDividendo.text = _datosRecibidos!['dividendo'].toString();
-        _controladorDivisor.text = _datosRecibidos!['divisor'].toString();
-        _controladorParteEntera.text = _datosRecibidos!['parteEntera'].toString();
-        _controladorResiduo.text = _datosRecibidos!['residuo'].toString();
-        _controladorNumInvertido.text = _datosRecibidos!['numeroInvertido'].toString();
-      });
+    final datos = _datosRecibidos.value;
+    if (datos != null) {
+      _controladorNombres.text = datos['nombres'] ?? '';
+      _controladorApellidos.text = datos['apellidos'] ?? '';
+      _controladorDividendo.text = datos['dividendo'].toString();
+      _controladorDivisor.text = datos['divisor'].toString();
+      _controladorParteEntera.text = datos['parteEntera'].toString();
+      _controladorResiduo.text = datos['residuo'].toString();
+      _controladorNumInvertido.text = datos['numeroInvertido'].toString();
     }
   }
 
@@ -474,7 +454,7 @@ class _PantallaUnoState extends State<PantallaUno> {
                     width: double.infinity,
                     height: 42,
                     child: ElevatedButton(
-                      onPressed: _irAPantallaDos,
+                      onPressed: () => _irAPantallaDos(context),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF92D050),
                         foregroundColor: Colors.black,
@@ -493,30 +473,35 @@ class _PantallaUnoState extends State<PantallaUno> {
 
                   const SizedBox(height: 12),
 
-                  // boton amarillo para mostrar resultados cuando esten listos
-                  SizedBox(
-                    width: double.infinity,
-                    height: 42,
-                    child: ElevatedButton(
-                      onPressed: _botonMostrarHabilitado
-                          ? _mostrarResultados
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFC000), // boton amarillo
-                        foregroundColor: Colors.black,
-                        disabledBackgroundColor: const Color(0xFF808080),
-                        disabledForegroundColor: Colors.black,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero,
-                          side: BorderSide(
-                            color: Colors.black,
-                            width: 1.2,
+                  // boton amarillo para mostrar resultados usando valuelistenablebuilder
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _botonMostrarHabilitado,
+                    builder: (context, habilitado, _) {
+                      return SizedBox(
+                        width: double.infinity,
+                        height: 42,
+                        child: ElevatedButton(
+                          onPressed: habilitado
+                              ? _mostrarResultados
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFC000), // boton amarillo
+                            foregroundColor: Colors.black,
+                            disabledBackgroundColor: const Color(0xFF808080),
+                            disabledForegroundColor: Colors.black,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.zero,
+                              side: BorderSide(
+                                color: Colors.black,
+                                width: 1.2,
+                              ),
+                            ),
+                            elevation: 0,
                           ),
+                          child: const Text('Mostrar resultados'),
                         ),
-                        elevation: 0,
-                      ),
-                      child: const Text('Mostrar resultados'),
-                    ),
+                      );
+                    },
                   ),
                 ],
               ),

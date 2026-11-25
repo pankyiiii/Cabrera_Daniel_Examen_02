@@ -20,7 +20,7 @@ class FlutterPrueba01 extends StatelessWidget {
         useMaterial3: true,
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: const PantallaUno(),
+      home: PantallaUno(),
     );
   }
 }

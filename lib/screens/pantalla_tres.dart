@@ -1,54 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-// tercera ventana del examen
-class PantallaTres extends StatefulWidget {
+// formateador para permitir unicamente numeros enteros mayores a cero
+class _SoloNumerosMayoresACeroFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final texto = newValue.text;
+    if (texto.isEmpty) return newValue;
+
+    // solo permitir numeros
+    if (!RegExp(r'^[0-9]+$').hasMatch(texto)) {
+      return oldValue;
+    }
+
+    // no permitir que empiece con cero para que siempre sea mayor a cero
+    if (texto.startsWith('0')) {
+      return oldValue;
+    }
+
+    // maximo 7 digitos
+    if (texto.length > 7) {
+      return oldValue;
+    }
+
+    return newValue;
+  }
+}
+
+// tercera ventana del examen con statelesswidget
+class PantallaTres extends StatelessWidget {
   final String nombres;
   final String apellidos;
 
-  const PantallaTres({
+  PantallaTres({
     super.key,
     required this.nombres,
     required this.apellidos,
-  });
+  }) {
+    // cargar nombres y apellidos recibidos
+    _controladorNombres.text = nombres;
+    _controladorApellidos.text = apellidos;
+  }
 
-  @override
-  State<PantallaTres> createState() => _PantallaTresState();
-}
-
-class _PantallaTresState extends State<PantallaTres> {
   // controladores para los campos de texto
-  late final TextEditingController _controladorNombres;
-  late final TextEditingController _controladorApellidos;
+  final TextEditingController _controladorNombres = TextEditingController();
+  final TextEditingController _controladorApellidos = TextEditingController();
   final TextEditingController _controladorDividendo = TextEditingController();
   final TextEditingController _controladorDivisor = TextEditingController();
   final TextEditingController _controladorNumero = TextEditingController();
 
-  // variables de estado
-  bool _botonCerrarHabilitado = false;
-  int _parteEntera = 0;
-  int _residuo = 0;
-  int _numeroInvertido = 0;
+  // notificador para habilitar el boton cerrar en statelesswidget
+  final ValueNotifier<bool> _botonCerrarHabilitado = ValueNotifier<bool>(false);
 
-  @override
-  void initState() {
-    super.initState();
-    // cargar nombres y apellidos recibidos
-    _controladorNombres = TextEditingController(text: widget.nombres);
-    _controladorApellidos = TextEditingController(text: widget.apellidos);
-  }
+  // notificadores para guardar los calculos matematicos
+  final ValueNotifier<int> _parteEntera = ValueNotifier<int>(0);
+  final ValueNotifier<int> _residuo = ValueNotifier<int>(0);
+  final ValueNotifier<int> _numeroInvertido = ValueNotifier<int>(0);
 
-  @override
-  void dispose() {
-    _controladorNombres.dispose();
-    _controladorApellidos.dispose();
-    _controladorDividendo.dispose();
-    _controladorDivisor.dispose();
-    _controladorNumero.dispose();
-    super.dispose();
-  }
-
-  // validar que sean numeros positivos mayores a cero y resultado mayor a cero
+  // validar campos usando solo sumas y restas e inversion matematica
   void _validarCampos() {
     final textoDividendo = _controladorDividendo.text.trim();
     final textoDivisor = _controladorDivisor.text.trim();
@@ -67,8 +79,8 @@ class _PantallaTresState extends State<PantallaTres> {
       int cociente = 0;
       int resto = dividendo;
       while (resto >= divisor) {
-        resto = resto - divisor; // resta
-        cociente = cociente + 1; // suma
+        resto = resto - divisor; // resta sucesiva
+        cociente = cociente + 1; // suma de contador
       }
       final resultadoParteEntera = cociente;
       final resultadoResiduo = resto;
@@ -89,37 +101,32 @@ class _PantallaTresState extends State<PantallaTres> {
           temporal = decenas;
         }
 
-        setState(() {
-          _parteEntera = resultadoParteEntera;
-          _residuo = resultadoResiduo;
-          _numeroInvertido = invertido;
-          _botonCerrarHabilitado = true;
-        });
+        _parteEntera.value = resultadoParteEntera;
+        _residuo.value = resultadoResiduo;
+        _numeroInvertido.value = invertido;
+        _botonCerrarHabilitado.value = true;
         return;
       }
     }
 
-    // si no cumple se deshabilita el boton cerrar
-    setState(() {
-      _botonCerrarHabilitado = false;
-    });
+    _botonCerrarHabilitado.value = false;
   }
 
   // retornar los datos a la segunda pantalla
-  void _cerrarVentana() {
+  void _cerrarVentana(BuildContext context) {
     final dividendo = int.parse(_controladorDividendo.text.trim());
     final divisor = int.parse(_controladorDivisor.text.trim());
     final numero = int.parse(_controladorNumero.text.trim());
 
     Navigator.pop(context, {
-      'nombres': widget.nombres,
-      'apellidos': widget.apellidos,
+      'nombres': nombres,
+      'apellidos': apellidos,
       'dividendo': dividendo,
       'divisor': divisor,
       'numero': numero,
-      'parteEntera': _parteEntera,
-      'residuo': _residuo,
-      'numeroInvertido': _numeroInvertido,
+      'parteEntera': _parteEntera.value,
+      'residuo': _residuo.value,
+      'numeroInvertido': _numeroInvertido.value,
     });
   }
 
@@ -280,8 +287,7 @@ class _PantallaTresState extends State<PantallaTres> {
                               controller: _controladorDividendo,
                               keyboardType: TextInputType.number,
                               inputFormatters: [
-                                // no dejar escribir nada que no sean numeros
-                                FilteringTextInputFormatter.digitsOnly,
+                                _SoloNumerosMayoresACeroFormatter(),
                               ],
                               onChanged: (_) => _validarCampos(),
                               style: const TextStyle(fontSize: 14),
@@ -335,8 +341,7 @@ class _PantallaTresState extends State<PantallaTres> {
                               controller: _controladorDivisor,
                               keyboardType: TextInputType.number,
                               inputFormatters: [
-                                // solo numeros
-                                FilteringTextInputFormatter.digitsOnly,
+                                _SoloNumerosMayoresACeroFormatter(),
                               ],
                               onChanged: (_) => _validarCampos(),
                               style: const TextStyle(fontSize: 14),
@@ -392,8 +397,7 @@ class _PantallaTresState extends State<PantallaTres> {
                               controller: _controladorNumero,
                               keyboardType: TextInputType.number,
                               inputFormatters: [
-                                // solo numeros positivos
-                                FilteringTextInputFormatter.digitsOnly,
+                                _SoloNumerosMayoresACeroFormatter(),
                               ],
                               onChanged: (_) => _validarCampos(),
                               style: const TextStyle(fontSize: 14),
@@ -429,28 +433,35 @@ class _PantallaTresState extends State<PantallaTres> {
 
                   const SizedBox(height: 90),
 
-                  // boton cerrar habilitado solo si el resultado es mayor a cero
-                  SizedBox(
-                    width: double.infinity,
-                    height: 42,
-                    child: ElevatedButton(
-                      onPressed: _botonCerrarHabilitado ? _cerrarVentana : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF92D050),
-                        foregroundColor: Colors.black,
-                        disabledBackgroundColor: const Color(0xFF808080),
-                        disabledForegroundColor: Colors.black,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero,
-                          side: BorderSide(
-                            color: Colors.black,
-                            width: 1.2,
+                  // boton cerrar usando valuelistenablebuilder en statelesswidget
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _botonCerrarHabilitado,
+                    builder: (context, habilitado, _) {
+                      return SizedBox(
+                        width: double.infinity,
+                        height: 42,
+                        child: ElevatedButton(
+                          onPressed: habilitado
+                              ? () => _cerrarVentana(context)
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF92D050),
+                            foregroundColor: Colors.black,
+                            disabledBackgroundColor: const Color(0xFF808080),
+                            disabledForegroundColor: Colors.black,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.zero,
+                              side: BorderSide(
+                                color: Colors.black,
+                                width: 1.2,
+                              ),
+                            ),
+                            elevation: 0,
                           ),
+                          child: const Text('Cerrar'),
                         ),
-                        elevation: 0,
-                      ),
-                      child: const Text('Cerrar'),
-                    ),
+                      );
+                    },
                   ),
                 ],
               ),
