@@ -24,4 +24,3 @@ class FlutterPrueba01 extends StatelessWidget {
     );
   }
 }
-
