@@ -22,7 +22,7 @@ class _FormateadorNombreApellido extends TextInputFormatter {
       return oldValue;
     }
 
-    // no permitir una letra repetida 3 o mas veces seguidas como eee o qqq
+    // no permitir una letra repetida 3 o mas veces seguidas como eee o qqq u otra repeticion de letras
     if (RegExp(r'(.)\1{2,}').hasMatch(texto.toLowerCase())) {
       return oldValue;
     }
