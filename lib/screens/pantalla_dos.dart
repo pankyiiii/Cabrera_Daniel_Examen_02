@@ -51,16 +51,18 @@ class PantallaDos extends StatelessWidget {
   final TextEditingController _controladorNumero = TextEditingController();
 
   // notificadores para habilitar botones en statelesswidget
-  final ValueNotifier<bool> _botonSiguienteHabilitado = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> _botonSiguienteHabilitado =
+      ValueNotifier<bool>(false);
   final ValueNotifier<bool> _botonCerrarHabilitado = ValueNotifier<bool>(false);
-  
+
   // variable interna para almacenar datos de la tercera pantalla
-  final ValueNotifier<Map<String, dynamic>?> _datosFinales = ValueNotifier<Map<String, dynamic>?>(null);
+  final ValueNotifier<Map<String, dynamic>?> _datosFinales =
+      ValueNotifier<Map<String, dynamic>?>(null);
 
   // validar que sea un nombre o apellido valido sin letras repetidas ni muy largo
   bool _esTextoValido(String texto) {
     if (texto.isEmpty) return false;
-    
+
     // longitud minima y maxima razonable para un solo nombre o apellido
     if (texto.length < 3 || texto.length > 12) return false;
 
@@ -445,9 +447,8 @@ class PantallaDos extends StatelessWidget {
                         width: double.infinity,
                         height: 42,
                         child: ElevatedButton(
-                          onPressed: habilitado
-                              ? () => _cerrarVentana(context)
-                              : null,
+                          onPressed:
+                              habilitado ? () => _cerrarVentana(context) : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF92D050),
                             foregroundColor: Colors.black,
