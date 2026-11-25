@@ -87,18 +87,13 @@ class PantallaTres extends StatelessWidget {
 
       // el resultado de la division debe ser mayor a cero
       if (resultadoParteEntera > 0) {
-        // invertir el numero matematicamente
+        // invertir el numero matematicamente (sin usar strings ni reversed)
         int invertido = 0;
         int temporal = numero;
         while (temporal > 0) {
-          int digito = temporal;
-          int decenas = 0;
-          while (digito >= 10) {
-            digito = digito - 10;
-            decenas = decenas + 1;
-          }
+          final digito = temporal % 10;
           invertido = (invertido * 10) + digito;
-          temporal = decenas;
+          temporal = temporal ~/ 10;
         }
 
         _parteEntera.value = resultadoParteEntera;
